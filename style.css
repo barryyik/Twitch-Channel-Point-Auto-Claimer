@@ -62,6 +62,12 @@ button {
     background-color: #0275d8;
     border: none;
     border-radius: 3px;
+    transition: background-color 0.3s ease-out 0s;
+}
+
+button:hover {
+    color: rgb(0, 0, 0);
+    background-color: #ffe600;
 }
 
 .centerDiv {
