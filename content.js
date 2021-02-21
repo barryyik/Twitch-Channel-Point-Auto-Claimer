@@ -2,7 +2,8 @@ setInterval(() => {
     const button = document.querySelector('.tw-button--success');
     if (button) {
         button.click();
-        let address = window.location.pathname.substring(1);
+        let addressTemp = window.location.pathname.substring(1);
+        let address = addressTemp.substring(0, addressTemp.indexOf('/'));
         let tcpacObj = 0;
         chrome.storage.local.get('tcpacObj', function (result) {
             tcpacObj = (result.tcpacObj == undefined) ? {} : result.tcpacObj;
