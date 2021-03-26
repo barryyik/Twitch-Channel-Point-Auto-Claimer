@@ -11,16 +11,16 @@ body {
 }
 
 .headerH1Box {
-    width: 300px;
+    width: 75%;
     padding: 10px;
     margin: auto;
-    background-color: rgb(0, 175, 152);
+    background-color: #00AF98;
     border-radius: 8px;
 }
 
 h1 {
     font-size: 16px;
-    color: white;
+    color: #FFF;
     text-align: center;
 }
 
@@ -34,8 +34,8 @@ th {
     line-height: 20px;
     text-align: start;
     padding: 10px 15px;
-    color: white;
-    background-color: rgb(99, 99, 99);
+    color: #FFF;
+    background-color: #636363;
 }
 
 td {
@@ -45,11 +45,11 @@ td {
 }
 
 tr:nth-child(2n+2) {
-    background-color: rgb(241, 241, 241);
+    background-color: #F1F1F1;
 }
 
 tr:nth-child(2n+1) {
-    background-color: rgb(207, 207, 207);
+    background-color: #CFCFCF;
 }
 
 #tcpacTableRowLast {
@@ -66,7 +66,7 @@ button {
 }
 
 button:hover {
-    color: rgb(0, 0, 0);
+    color: #000;
     background-color: #ffe600;
 }
 
