@@ -1,5 +1,5 @@
 setInterval(() => {
-    const button = document.querySelector('.tw-button--success')
+    const button = document.querySelector('.ScCoreButtonSuccess-sc-1qn4ixc-5')
     if (!button)
         return
     button.click()
