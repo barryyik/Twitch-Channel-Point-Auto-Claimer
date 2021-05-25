@@ -9,3 +9,32 @@ This is a chrome extension for collecting Twitch Points on Twitch.tv.
 
 ## Chrome Web Store Extension:
 https://chrome.google.com/webstore/detail/twitch-channel-point-auto/fchmanciglollaagnijpcagpofejennb
+
+## Update log
+
+```
+Version 1.0.7 (2021.05.25):
+- Change: Bonus button detection is now more adaptive for future Twitch changes
+
+Version 1.0.6 (2021.05.18):
+- Change: Updated with Twitch.tv new button name
+- Change: Minor UI changes
+
+Version 1.0.5 (2021.04.26):
+- Change: Enhanced performance
+- Change: Reduced extension file size
+
+Version 1.0.4 (2021.03.26):
+- Change: Enhanced performance
+
+Version 1.0.3 (2021.02.24):
+- Fix: Display bug
+
+Version 1.0.2 (2021.02.21):
+- Change: Reduced extension file size
+- Change: Minor UI tweaks
+
+Version 1.0.1 (2021.02.12):
+- Add: zh-TW language support
+- Change: Minor UI tweaks
+```
