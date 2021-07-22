@@ -13,6 +13,9 @@ https://chrome.google.com/webstore/detail/twitch-channel-point-auto/fchmanciglol
 ## Update log
 
 ```
+Version 1.0.8 (2021.07.22):
+- Fix: Record cannot be cleared
+
 Version 1.0.7 (2021.05.25):
 - Change: Bonus button detection is now more adaptive for future Twitch changes
 

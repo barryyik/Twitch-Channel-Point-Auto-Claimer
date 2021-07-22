@@ -5,10 +5,10 @@ setInterval(() => {
     if (button.nodeName != 'BUTTON')
         button = getButtonByArielLabel()
     button.click()
-    let address = window.location.pathname.match(/(?<=\/).+?(?=\/|$)/g)
+    let address = (window.location.pathname.match(/(?<=\/).+?(?=\/|$)/))[0]
     chrome.storage.local.get('tcpacObj', result => {
         let tcpacObj = result.tcpacObj ?? {}
-        tcpacObj[address[0]] = (tcpacObj[address[0]] ?? 0) + 1
+        tcpacObj[address] = (tcpacObj[address] ?? 0) + 1
         chrome.storage.local.set({tcpacObj: tcpacObj}, () => {})
     })
 }, 2000)
@@ -45,10 +45,10 @@ function getButtonByArielLabel() {
         "보너스 받기"
     ]
     let buttonElement = null
-    arr.some(labelName => {
-        if (!document.querySelector(`[aria-label="${labelName}"]`))
+    arr.some(labelText => {
+        if (!document.querySelector(`[aria-label="${labelText}"]`))
             return false
-        buttonElement = document.querySelector(`[aria-label="${labelName}"]`)
+        buttonElement = document.querySelector(`[aria-label="${labelText}"]`)
         return true
     })
     return buttonElement

@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeTable()
     document.querySelector('#creditDiv').insertAdjacentHTML("beforeend", `<p>(Version: ${chrome.runtime.getManifest().version})</p>`)
     tcpacDisplayDiv.addEventListener("click", e => {
-        if (e.toElement.nodeName !== 'BUTTON')
+        if (e.target.nodeName !== 'BUTTON')
             return
         if (e.target.id === 'tcpacResetBtn')
             return chrome.storage.local.remove('tcpacObj', () => initializeTable())
