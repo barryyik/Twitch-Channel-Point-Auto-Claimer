@@ -13,6 +13,9 @@ https://chrome.google.com/webstore/detail/twitch-channel-point-auto/fchmanciglol
 ## Update log
 
 ```
+Version 1.1.0 (2021.09.26):
+- Change: Migrated from Manifest V2 to Manifest V3
+
 Version 1.0.8 (2021.07.22):
 - Fix: Record cannot be cleared
 
