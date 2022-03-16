@@ -1,4 +1,11 @@
+const excludeUrl = [,
+    /.*:\/\/dashboard\.twitch\.tv.*/,
+    /.*:\/\/.*\.twitch\.tv\/settings\/.*/,
+]
+
 setInterval(() => {
+    if (excludeUrl.some(url => window.location.href.match(url)))
+        return
     let button = document.querySelector('.ScCoreButtonSuccess-sc-1qn4ixc-5') || document.querySelector('.VGQNd') || document.querySelector('.claimable-bonus__icon')?.parentElement?.parentElement?.parentElement || getButtonByArielLabel()
     if (!button)
         return

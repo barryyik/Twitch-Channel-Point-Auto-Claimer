@@ -13,6 +13,9 @@ https://chrome.google.com/webstore/detail/twitch-channel-point-auto/fchmanciglol
 ## Update log
 
 ```
+Version 1.1.1 (2022.03.16):
+- Fix: Exclude dashboard.twitch.tv and Setting page
+
 Version 1.1.0 (2021.09.26):
 - Change: Migrated from Manifest V2 to Manifest V3
 
