@@ -10,9 +10,25 @@ This is a chrome extension for collecting Twitch Points on Twitch.tv.
 ## Chrome Web Store Extension:
 https://chrome.google.com/webstore/detail/twitch-channel-point-auto/fchmanciglollaagnijpcagpofejennb
 
+## Made With:
+- Bun v1.3.9
+
+## How To Compile:
+```
+bun install
+bun run build
+```
+
 ## Update log
 
 ```
+Version 1.2.2 (2026.06.29):
+- Change: Built with React + Vite
+- Add: Light & Dark Theme
+- Add: Clear record confirmation
+- Add: Firefox support
+- Fix: Fix a bug when user is accessing a moderator page
+
 Version 1.1.1 (2022.03.16):
 - Fix: Exclude dashboard.twitch.tv and Setting page
 
