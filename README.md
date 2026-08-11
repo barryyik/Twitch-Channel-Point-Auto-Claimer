@@ -22,6 +22,17 @@ bun run build
 ## Update log
 
 ```
+Version 1.2.3 (2026.08.12):
+- Fix: Prevent double-counting claims (cooldown + handled button guard)
+- Fix: Multi-tab storage races via background single-writer increments
+- Fix: Normalize channel names to lowercase; merge legacy casing
+- Change: Scoped MutationObserver on community-points-summary; 5s fallback interval
+- Change: Prefer stable claim selectors; demote hashed CSS classes
+- Change: Popup shows claim counts only (removed ×50 estimate)
+- Add: Live popup updates via storage.onChanged; theme FOUC mirror
+- Add: i18n for confirms, empty/loading, theme labels
+- Change: Refactor claim helpers, popup i18n/theme modules
+
 Version 1.2.2 (2026.06.29):
 - Change: Built with React + Vite
 - Add: Light & Dark Theme

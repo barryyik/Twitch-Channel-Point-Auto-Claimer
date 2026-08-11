@@ -38,6 +38,11 @@ export function getChannelNameFromUrl(url) {
   if (pathParts[0] === 'popout' && pathParts[1] && !['moderator', 'settings', 'dashboard'].includes(pathParts[1])) {
     return pathParts[1];
   }
+
+  // Bare /popout (no channel) is not a channel page
+  if (pathParts[0] === 'popout' && !pathParts[1]) {
+    return null;
+  }
   
   // For regular channel URLs, the first part is the channel name
   // But only if it's not a special route
@@ -45,7 +50,7 @@ export function getChannelNameFromUrl(url) {
     'directory', 'videos', 'search', 'settings', 'dashboard', 
     'subscriptions', 'friends', 'inventory', 'drops', 'wallet',
     'downloads', 'jobs', 'security', 'creators', 'turbo',
-    'broadcast', 'messages', 'notifications', 'moderator'
+    'broadcast', 'messages', 'notifications', 'moderator', 'popout'
   ];
   
   if (pathParts[0] && !specialRoutes.includes(pathParts[0])) {

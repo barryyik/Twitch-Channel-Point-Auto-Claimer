@@ -1,5 +1,5 @@
 // scripts/build-content.js
-// This script generates the content.js file by injecting the parser code
+// Generates content.js by injecting shared util modules into the template
 
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { resolve, dirname } from 'path';
@@ -8,48 +8,62 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Paths
 const templatePath = resolve(__dirname, '../src/content/content.template.js');
-const parserPath = resolve(__dirname, '../src/utils/channel-parser.js');
 const outputPath = resolve(__dirname, '../src/content/content.js');
 
-console.log('🔨 Building content.js from template...');
+const modules = [
+  {
+    placeholder: '{{CHANNEL_PARSER}}',
+    path: resolve(__dirname, '../src/utils/channel-parser.js'),
+    label: 'channel-parser.js'
+  },
+  {
+    placeholder: '{{CLAIM_BUTTON}}',
+    path: resolve(__dirname, '../src/utils/claim-button.js'),
+    label: 'claim-button.js'
+  },
+  {
+    placeholder: '{{CLAIM_GUARD}}',
+    path: resolve(__dirname, '../src/utils/claim-guard.js'),
+    label: 'claim-guard.js'
+  }
+];
 
-// Check if template exists
+console.log('Building content.js from template...');
+
 if (!existsSync(templatePath)) {
-  console.error('❌ Template file not found:', templatePath);
+  console.error('Template file not found:', templatePath);
   process.exit(1);
 }
 
-// Check if parser exists
-if (!existsSync(parserPath)) {
-  console.error('❌ Parser file not found:', parserPath);
-  process.exit(1);
+function stripExports(code) {
+  return code
+    .replace(/export\s+function\s+/g, 'function ')
+    .replace(/export\s+const\s+/g, 'const ')
+    .replace(/export\s+\{[^}]+\};?/g, '')
+    .trim();
 }
 
-// Read template
 let template = readFileSync(templatePath, 'utf-8');
 
-// Read parser code (extract the function, removing export)
-let parserCode = readFileSync(parserPath, 'utf-8');
+for (const mod of modules) {
+  if (!existsSync(mod.path)) {
+    console.error('Module not found:', mod.path);
+    process.exit(1);
+  }
+  if (!template.includes(mod.placeholder)) {
+    console.error(`Placeholder ${mod.placeholder} missing from template`);
+    process.exit(1);
+  }
 
-// Remove the export statement and keep only the function
-parserCode = parserCode
-  .replace(/export\s+function\s+/, 'function ')
-  .replace(/export\s+{\s*getChannelNameFromUrl\s*};?/, '')
-  .trim();
-
-// Wrap parser code to ensure it's properly defined
-parserCode = `
-// Channel parser function (auto-generated from utils/channel-parser.js)
-${parserCode}
+  const raw = readFileSync(mod.path, 'utf-8');
+  const injected = `
+// --- auto-generated from utils/${mod.label} ---
+${stripExports(raw)}
 `;
+  template = template.replace(mod.placeholder, injected);
+  console.log(`Injected ${mod.label}`);
+}
 
-// Replace placeholder with parser code
-const generatedContent = template.replace('{{CHANNEL_PARSER}}', parserCode);
-
-// Write the generated content
-writeFileSync(outputPath, generatedContent, 'utf-8');
-
-console.log('✅ Content script generated successfully:', outputPath);
-console.log('📝 Generated from template and shared parser');
+writeFileSync(outputPath, template, 'utf-8');
+console.log('Content script generated:', outputPath);

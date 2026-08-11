@@ -91,6 +91,16 @@ describe('Channel Name Extraction Logic', () => {
       const url = 'https://www.twitch.tv/popout/привет/chat';
       expect(getChannelNameFromUrl(url)).toBe('привет');
     });
+
+    it('should return null for bare /popout with no channel', () => {
+      const url = 'https://www.twitch.tv/popout';
+      expect(getChannelNameFromUrl(url)).toBeNull();
+    });
+
+    it('should return null for bare /popout with trailing slash', () => {
+      const url = 'https://www.twitch.tv/popout/';
+      expect(getChannelNameFromUrl(url)).toBeNull();
+    });
   });
 
   describe('Special Routes (Should Return null)', () => {

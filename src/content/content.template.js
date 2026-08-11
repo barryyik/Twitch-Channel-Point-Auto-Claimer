@@ -1,160 +1,169 @@
 // src/content/content.template.js
-// Template for content script
+// Template for content script — placeholders injected by scripts/build-content.js
 
-console.log('[Twitch Channel Point Auto Claimer] Content script loaded and running');
+const DEBUG = false;
 
-// Channel parser function (injected during build)
+function log(...args) {
+  if (DEBUG) console.log('[Twitch Channel Point Auto Claimer]', ...args);
+}
+
+function warn(...args) {
+  if (DEBUG) console.warn('[Twitch Channel Point Auto Claimer]', ...args);
+}
+
 {{CHANNEL_PARSER}}
+
+{{CLAIM_BUTTON}}
+
+{{CLAIM_GUARD}}
 
 const excludeUrl = [
   /.*:\/\/dashboard\.twitch\.tv.*/,
   /.*:\/\/.*\.twitch\.tv\/settings\/.*/,
 ];
 
-// Debounce function to prevent multiple rapid claims
+const claimGuard = createClaimGuard({ cooldownMs: 2000 });
+
+function isExcludedUrl() {
+  return excludeUrl.some((url) => window.location.href.match(url));
+}
+
 function debounce(func, wait) {
   let timeout;
   return function executedFunction(...args) {
-    const later = () => {
-      clearTimeout(timeout);
-      func(...args);
-    };
     clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
+    timeout = setTimeout(() => func(...args), wait);
   };
 }
 
+function sendIncrement(channelName) {
+  try {
+    chrome.runtime.sendMessage(
+      { type: 'INCREMENT_CLAIM', channel: channelName },
+      (response) => {
+        if (chrome.runtime.lastError) {
+          warn('INCREMENT_CLAIM failed:', chrome.runtime.lastError.message);
+          return;
+        }
+        if (response?.ok) {
+          log(`Updated count for ${channelName}: ${response.count}`);
+        }
+      }
+    );
+  } catch (e) {
+    warn('sendMessage error:', e);
+  }
+}
+
 const claimBonus = debounce(() => {
-  // Check if we're on excluded URLs
-  if (excludeUrl.some(url => window.location.href.match(url))) {
-    console.log('[Twitch Channel Point Auto Claimer] On excluded URL, skipping');
+  if (isExcludedUrl()) {
+    log('On excluded URL, skipping');
     return;
   }
 
-  // Try multiple selectors to find the claim button
-  let button = document.querySelector('.ScCoreButtonSuccess-sc-1qn4ixc-5') || 
-               document.querySelector('.ScCoreButtonSuccess-sc-ocjdkf-1') ||
-               document.querySelector('[data-test-selector="claimable-bonus"]') ||
-               document.querySelector('.claimable-bonus__icon')?.closest('button') ||
-               getButtonByAriaLabel();
+  const summary = findCommunityPointsSummary(document);
+  const searchRoot = summary || document;
+  const button = findClaimButton(searchRoot);
 
   if (!button) return;
-
-  // Ensure it's a button element
-  if (button.nodeName !== 'BUTTON') {
-    button = button.querySelector('button') || getButtonByAriaLabel();
-  }
-
-  if (!button || button.disabled) return;
-
-  console.log('[Twitch Channel Point Auto Claimer] Claim button found, clicking...');
-  
-  // Click the button
-  button.click();
-
-  // Get channel name from URL using shared parser
-  const channelName = getChannelNameFromUrl(window.location.href);
-  
-  // Only record if we have a valid channel name
-  if (!channelName) {
-    console.warn('[Twitch Channel Point Auto Claimer] Could not extract channel name from URL:', window.location.href);
+  if (!claimGuard.canClaim(button)) {
+    log('Claim skipped (already handled or cooldown)');
     return;
   }
 
-  console.log(`[Twitch Channel Point Auto Claimer] Claimed bonus for channel: ${channelName}`);
-
-  // Update storage with claimed count
-  chrome.storage.local.get('tcpacObj', result => {
-    let tcpacObj = result.tcpacObj ?? {};
-    tcpacObj[channelName] = (tcpacObj[channelName] ?? 0) + 1;
-    chrome.storage.local.set({ tcpacObj: tcpacObj }, () => {
-      console.log(`[Twitch Channel Point Auto Claimer] Updated count for ${channelName}: ${tcpacObj[channelName]}`);
-    });
-  });
-}, 500);
-
-function getButtonByAriaLabel() {
-  const labels = [
-    "Claim Bonus",
-    "Få bonus",
-    "Bonus einfordern",
-    "Reclamar bonificación",
-    "Reclamar bono",
-    "Récupérer un bonus",
-    "Riscatta bonus",
-    "Bónusz igénylése",
-    "Bonus claimen",
-    "Motta bonus",
-    "Odbierz bonus",
-    "Receber bónus",
-    "Resgatar Bônus",
-    "Obține bonusul",
-    "Vyzdvihnúť bonus",
-    "Lunasta bonus",
-    "Hämta bonus",
-    "Nhận thưởng",
-    "Bonusu al",
-    "Vyzvednout bonus",
-    "Διεκδίκηση μπόνους",
-    "Получаване на бонус",
-    "Получить бонус",
-    "เคลมโบนัส",
-    "领取奖励",
-    "領取額外獎勵",
-    "ボーナスを受け取る",
-    "보너스 받기"
-  ];
-
-  for (const label of labels) {
-    const button = document.querySelector(`[aria-label="${label}"]`);
-    if (button) return button;
+  const channelNameRaw = getChannelNameFromUrl(window.location.href);
+  if (!channelNameRaw) {
+    warn('Could not extract channel name from URL:', window.location.href);
+    return;
   }
-  return null;
+
+  const channelName = channelNameRaw.toLowerCase();
+
+  claimGuard.markClaimed(button);
+  log('Claim button found, clicking for', channelName);
+  button.click();
+  sendIncrement(channelName);
+}, 300);
+
+// --- Observers: scoped summary + light body rediscovery ---
+
+let summaryObserver = null;
+let bodyObserver = null;
+let summaryDebounceId = null;
+let bodyDebounceId = null;
+let observedSummary = null;
+
+function disconnectSummaryObserver() {
+  if (summaryObserver) {
+    summaryObserver.disconnect();
+    summaryObserver = null;
+  }
+  observedSummary = null;
 }
 
-// Set up mutation observer to detect dynamically added claim buttons
-let observer = null;
-let timeoutId = null;
+function observeSummary(summaryEl) {
+  if (!summaryEl || summaryEl === observedSummary) return;
 
-function setupObserver() {
-  if (observer) observer.disconnect();
+  disconnectSummaryObserver();
+  observedSummary = summaryEl;
 
-  observer = new MutationObserver((mutations) => {
-    // Clear previous timeout
-    if (timeoutId) clearTimeout(timeoutId);
-    
-    // Debounce the check to avoid too many calls
-    timeoutId = setTimeout(() => {
-      claimBonus();
-    }, 100);
+  summaryObserver = new MutationObserver(() => {
+    if (summaryDebounceId) clearTimeout(summaryDebounceId);
+    summaryDebounceId = setTimeout(() => claimBonus(), 100);
   });
 
-  observer.observe(document.body, {
-    childList: true,
-    subtree: true
-  });
-}
-
-// Initialize the claimer
-function initClaimer() {
-  console.log('[Twitch Channel Point Auto Claimer] Initializing claimer...');
-  
-  // Run claim check periodically (fallback for cases where mutation observer might miss)
-  setInterval(() => {
-    if (!excludeUrl.some(url => window.location.href.match(url))) {
-      claimBonus();
-    }
-  }, 2000);
-
-  setupObserver();
-  
-  // Initial check
+  summaryObserver.observe(summaryEl, { childList: true, subtree: true });
+  log('Observing community-points-summary');
   claimBonus();
-  
-  console.log('[Twitch Channel Point Auto Claimer] Claimer initialized successfully');
 }
 
-// Start the claimer when the page is fully loaded
+function rediscoverSummary() {
+  const summary = findCommunityPointsSummary(document);
+  if (summary && summary !== observedSummary) {
+    observeSummary(summary);
+  } else if (!summary && observedSummary) {
+    disconnectSummaryObserver();
+  }
+}
+
+function setupBodyObserver() {
+  if (bodyObserver) bodyObserver.disconnect();
+
+  // Light rediscovery only (debounced) — claim checks run on the summary observer
+  bodyObserver = new MutationObserver(() => {
+    if (bodyDebounceId) clearTimeout(bodyDebounceId);
+    bodyDebounceId = setTimeout(rediscoverSummary, 500);
+  });
+
+  if (document.body) {
+    bodyObserver.observe(document.body, { childList: true, subtree: true });
+  }
+}
+
+function initClaimer() {
+  log('Initializing claimer...');
+
+  const summary = findCommunityPointsSummary(document);
+  if (summary) observeSummary(summary);
+
+  setupBodyObserver();
+
+  // Fallback interval (5s) for cases observers miss
+  setInterval(() => {
+    if (isExcludedUrl()) return;
+
+    const summary = findCommunityPointsSummary(document);
+    if (summary && summary !== observedSummary) {
+      observeSummary(summary);
+    }
+
+    claimBonus();
+  }, 5000);
+
+  claimBonus();
+  log('Claimer initialized');
+}
+
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initClaimer);
 } else {

@@ -71,6 +71,17 @@ if (existsSync(imagesSrc)) {
   console.log('✓ Copied images');
 }
 
+// 5b. Copy theme boot script (classic script; Vite cannot bundle without type=module)
+const themeBootSrc = resolve(srcDir, 'popup/theme-boot.js');
+const themeBootDest = resolve(distDir, 'theme-boot.js');
+if (existsSync(themeBootSrc)) {
+  copyFileSync(themeBootSrc, themeBootDest);
+  console.log('✓ Copied theme-boot.js');
+} else {
+  console.error('❌ theme-boot.js not found:', themeBootSrc);
+  process.exit(1);
+}
+
 // 6. Build popup with Vite
 console.log(`\n📦 Building popup with Vite...`);
 try {
@@ -85,6 +96,9 @@ try {
   console.error('❌ Vite build failed:', error.message);
   process.exit(1);
 }
+
+// Ensure theme-boot.js survives Vite (emptyOutDir false, but re-copy for safety)
+copyFileSync(themeBootSrc, themeBootDest);
 
 console.log(`\n✅ Build complete for ${browserTarget}!`);
 console.log(`📁 Output: ${distDir}`);

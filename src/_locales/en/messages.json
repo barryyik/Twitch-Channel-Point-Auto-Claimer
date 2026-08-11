@@ -6,10 +6,13 @@
     "message": "Channel"
   },
   "claimedcount": {
-    "message": "Claimed Count (Points)"
+    "message": "Claims"
+  },
+  "approxpoints": {
+    "message": "Approx."
   },
   "clearrecord": {
-    "message": "Clear Records"
+    "message": "Clear"
   },
   "clear": {
     "message": "Clear"
@@ -28,5 +31,23 @@
   },
   "system": {
     "message": "System"
+  },
+  "loading": {
+    "message": "Loading..."
+  },
+  "empty": {
+    "message": "No claims recorded yet"
+  },
+  "confirmclearall": {
+    "message": "Confirm to clear records for ALL?"
+  },
+  "confirmclearchannel": {
+    "message": "Confirm to clear records for $1?"
+  },
+  "cancel": {
+    "message": "Cancel"
+  },
+  "toggledtheme": {
+    "message": "Toggle theme"
   }
 }
