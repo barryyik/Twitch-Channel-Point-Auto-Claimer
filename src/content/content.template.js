@@ -62,8 +62,7 @@ const claimBonus = debounce(() => {
   }
 
   const summary = findCommunityPointsSummary(document);
-  const searchRoot = summary || document;
-  const button = findClaimButton(searchRoot);
+  const button = resolveClaimButton(summary, document);
 
   if (!button) return;
   if (!claimGuard.canClaim(button)) {
@@ -129,10 +128,13 @@ function rediscoverSummary() {
 function setupBodyObserver() {
   if (bodyObserver) bodyObserver.disconnect();
 
-  // Light rediscovery only (debounced) — claim checks run on the summary observer
+  // Rediscover summary and re-check for claim buttons outside the summary subtree
   bodyObserver = new MutationObserver(() => {
     if (bodyDebounceId) clearTimeout(bodyDebounceId);
-    bodyDebounceId = setTimeout(rediscoverSummary, 500);
+    bodyDebounceId = setTimeout(() => {
+      rediscoverSummary();
+      claimBonus();
+    }, 500);
   });
 
   if (document.body) {

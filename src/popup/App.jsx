@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { storage, runtime } from '../utils/browser-api.js';
 import { getMessage } from './i18n.js';
-import { useTheme } from './useTheme.js';
+import { useTheme, ACCENT_PRESETS } from './useTheme.js';
 import { PaletteIcon, MonitorIcon, SunIcon, MoonIcon, TrashIcon } from './ThemeIcons.jsx';
 import ConfirmDialog from './ConfirmDialog.jsx';
 import './App.css';
@@ -25,10 +25,12 @@ const App = () => {
   const bodyTableRef = useRef(null);
   const {
     theme,
+    accent,
     showThemeMenu,
     setShowThemeMenu,
     menuRef,
-    saveThemePreference
+    saveThemePreference,
+    saveAccentPreference
   } = useTheme();
 
   const loadData = () => {
@@ -78,7 +80,7 @@ const App = () => {
     if (runtime && runtime.getManifest) {
       setVersion(runtime.getManifest().version);
     } else {
-      setVersion('1.2.3');
+      setVersion('1.3.0');
     }
   }, []);
 
@@ -217,6 +219,25 @@ const App = () => {
                 <MoonIcon />
                 {getMessage('dark')}
               </button>
+
+              <div className="theme-dropdown-divider" role="separator" />
+              <div className="accent-section">
+                <div className="accent-section-label">{getMessage('accent')}</div>
+                <div className="accent-swatch-row" role="group" aria-label={getMessage('accent')}>
+                  {ACCENT_PRESETS.map((preset) => (
+                    <button
+                      key={preset.id}
+                      type="button"
+                      className={`accent-swatch ${accent === preset.id ? 'active' : ''}`}
+                      style={{ '--swatch-color': preset.swatch }}
+                      onClick={() => saveAccentPreference(preset.id)}
+                      title={getMessage(`accent${preset.id}`)}
+                      aria-label={getMessage(`accent${preset.id}`)}
+                      aria-pressed={accent === preset.id}
+                    />
+                  ))}
+                </div>
+              </div>
             </div>
           )}
         </div>

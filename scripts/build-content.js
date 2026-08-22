@@ -66,4 +66,11 @@ ${stripExports(raw)}
 }
 
 writeFileSync(outputPath, template, 'utf-8');
+
+const exportPattern = /\bexport\s+(function|const|class|\{)/;
+if (exportPattern.test(template)) {
+  console.error('❌ Stray export keyword found in generated content.js');
+  process.exit(1);
+}
+
 console.log('Content script generated:', outputPath);

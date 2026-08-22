@@ -22,6 +22,16 @@ bun run build
 ## Update log
 
 ```
+Version 1.3.0 (2026.08.22):
+- Add: Six accent color presets (teal, green, blue, purple, orange, pink) in theme menu
+- Add: Accent color persistence with pre-paint apply via theme-boot (no flash on reload)
+- Add: i18n for accent labels (en + zh-TW)
+- Fix: Claim button discovery when bonus UI renders outside community-points-summary
+- Change: Body observer triggers claim checks on DOM changes outside summary subtree
+- Change: Single source of truth for accent presets (accent-presets.js + generated theme-boot)
+- Change: Content script build fails if stray export keywords remain after injection
+- Change: theme-boot.js gitignored like content.js; predev generates for local dev
+
 Version 1.2.3 (2026.08.12):
 - Fix: Prevent double-counting claims (cooldown + handled button guard)
 - Fix: Multi-tab storage races via background single-writer increments

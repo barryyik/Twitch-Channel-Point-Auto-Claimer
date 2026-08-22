@@ -1,9 +1,14 @@
 // src/popup/useTheme.js
 import { useState, useEffect, useRef } from 'react';
 import { storage } from '../utils/browser-api.js';
+import { normalizeAccent } from './accent-presets.js';
 
 const THEME_STORAGE_KEY = 'themePreference';
 const THEME_MIRROR_KEY = 'tcpacThemePreference';
+const ACCENT_STORAGE_KEY = 'accentPreference';
+const ACCENT_MIRROR_KEY = 'tcpacAccentPreference';
+
+export { ACCENT_PRESETS } from './accent-presets.js';
 
 export function applyTheme(themeMode) {
   const root = document.documentElement;
@@ -19,18 +24,27 @@ export function applyTheme(themeMode) {
   }
 }
 
+export function applyAccent(accentId) {
+  document.documentElement.dataset.accent = normalizeAccent(accentId);
+}
+
 export function useTheme() {
   const [theme, setTheme] = useState('system');
+  const [accent, setAccent] = useState('teal');
   const [showThemeMenu, setShowThemeMenu] = useState(false);
   const menuRef = useRef(null);
 
   useEffect(() => {
-    storage.local.get(THEME_STORAGE_KEY, (result) => {
+    storage.local.get([THEME_STORAGE_KEY, ACCENT_STORAGE_KEY], (result) => {
       const savedTheme = result[THEME_STORAGE_KEY] || 'system';
+      const savedAccent = normalizeAccent(result[ACCENT_STORAGE_KEY]);
       setTheme(savedTheme);
+      setAccent(savedAccent);
       applyTheme(savedTheme);
+      applyAccent(savedAccent);
       try {
         localStorage.setItem(THEME_MIRROR_KEY, savedTheme);
+        localStorage.setItem(ACCENT_MIRROR_KEY, savedAccent);
       } catch {
         // ignore
       }
@@ -70,11 +84,26 @@ export function useTheme() {
     }
   };
 
+  const saveAccentPreference = (accentId) => {
+    const next = normalizeAccent(accentId);
+    setAccent(next);
+    applyAccent(next);
+    setShowThemeMenu(false);
+    storage.local.set({ [ACCENT_STORAGE_KEY]: next });
+    try {
+      localStorage.setItem(ACCENT_MIRROR_KEY, next);
+    } catch {
+      // ignore
+    }
+  };
+
   return {
     theme,
+    accent,
     showThemeMenu,
     setShowThemeMenu,
     menuRef,
-    saveThemePreference
+    saveThemePreference,
+    saveAccentPreference
   };
 }

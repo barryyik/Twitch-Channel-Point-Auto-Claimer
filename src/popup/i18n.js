@@ -17,7 +17,14 @@ const FALLBACKS = {
   confirmclearall: 'Confirm to clear records for ALL?',
   confirmclearchannel: 'Confirm to clear records for $1?',
   cancel: 'Cancel',
-  toggledtheme: 'Toggle theme'
+  toggledtheme: 'Toggle theme',
+  accent: 'Accent',
+  accentteal: 'Teal',
+  accentgreen: 'Green',
+  accentblue: 'Blue',
+  accentpurple: 'Purple',
+  accentorange: 'Orange',
+  accentpink: 'Pink'
 };
 
 export function getMessage(messageName, substitutions) {

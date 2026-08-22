@@ -49,5 +49,26 @@
   },
   "toggledtheme": {
     "message": "切換主題"
+  },
+  "accent": {
+    "message": "強調色"
+  },
+  "accentteal": {
+    "message": "青綠"
+  },
+  "accentgreen": {
+    "message": "綠色"
+  },
+  "accentblue": {
+    "message": "藍色"
+  },
+  "accentpurple": {
+    "message": "紫色"
+  },
+  "accentorange": {
+    "message": "橙色"
+  },
+  "accentpink": {
+    "message": "粉色"
   }
 }

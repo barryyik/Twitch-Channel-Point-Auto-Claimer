@@ -7,8 +7,11 @@ dist-chrome/
 dist-firefox/
 dist.zip
 
-# Generated content script (from template)
+# Generated from template (see scripts/build-content.js)
 src/content/content.js
+
+# Generated from template (see scripts/build-theme-boot.js)
+src/popup/theme-boot.js
 
 # Environment files
 .env

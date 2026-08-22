@@ -74,3 +74,16 @@ export function findClaimButton(root = document) {
   if (!button || button.disabled) return null;
   return button;
 }
+
+/**
+ * Resolve claim button: search summary first, then fall back to full document
+ * when the button is rendered outside the community-points-summary subtree.
+ */
+export function resolveClaimButton(summary, doc = document) {
+  const searchRoot = summary || doc;
+  let button = findClaimButton(searchRoot);
+  if (!button && summary) {
+    button = findClaimButton(doc);
+  }
+  return button;
+}

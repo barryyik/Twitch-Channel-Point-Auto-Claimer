@@ -49,5 +49,26 @@
   },
   "toggledtheme": {
     "message": "Toggle theme"
+  },
+  "accent": {
+    "message": "Accent"
+  },
+  "accentteal": {
+    "message": "Teal"
+  },
+  "accentgreen": {
+    "message": "Green"
+  },
+  "accentblue": {
+    "message": "Blue"
+  },
+  "accentpurple": {
+    "message": "Purple"
+  },
+  "accentorange": {
+    "message": "Orange"
+  },
+  "accentpink": {
+    "message": "Pink"
   }
 }

@@ -1,6 +1,6 @@
 // tests/claim-button.test.js
 import { describe, it, expect } from 'bun:test';
-import { findClaimButton, findCommunityPointsSummary } from '../src/utils/claim-button.js';
+import { findClaimButton, findCommunityPointsSummary, resolveClaimButton } from '../src/utils/claim-button.js';
 
 /** Minimal element tree for unit tests without jsdom */
 function el(tag, attrs = {}, children = []) {
@@ -116,5 +116,28 @@ describe('findCommunityPointsSummary', () => {
     const summary = el('div', { class: 'community-points-summary' });
     const root = makeRoot([summary]);
     expect(findCommunityPointsSummary(root)).toBe(summary);
+  });
+});
+
+describe('resolveClaimButton', () => {
+  it('finds button inside summary when present', () => {
+    const button = el('button', { 'data-test-selector': 'claimable-bonus' });
+    const summary = el('div', { 'data-test-selector': 'community-points-summary' }, [button]);
+    const doc = makeRoot([summary]);
+    expect(resolveClaimButton(summary, doc)).toBe(button);
+  });
+
+  it('falls back to document when button is outside summary', () => {
+    const button = el('button', { 'data-test-selector': 'claimable-bonus' });
+    const summary = el('div', { 'data-test-selector': 'community-points-summary' });
+    const doc = makeRoot([summary, button]);
+    expect(findClaimButton(summary)).toBeNull();
+    expect(resolveClaimButton(summary, doc)).toBe(button);
+  });
+
+  it('searches document when summary is null', () => {
+    const button = el('button', { 'aria-label': 'Claim Bonus' });
+    const doc = makeRoot([button]);
+    expect(resolveClaimButton(null, doc)).toBe(button);
   });
 });
