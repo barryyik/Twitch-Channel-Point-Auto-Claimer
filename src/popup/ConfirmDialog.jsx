@@ -3,6 +3,7 @@ import { getMessage } from './i18n.js';
 
 const ConfirmDialog = ({ open, message, confirmLabel, onConfirm, onCancel }) => {
   const cancelRef = useRef(null);
+  const dialogRef = useRef(null);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -13,6 +14,25 @@ const ConfirmDialog = ({ open, message, confirmLabel, onConfirm, onCancel }) => 
       if (event.key === 'Escape') {
         event.preventDefault();
         onCancel();
+        return;
+      }
+
+      if (event.key !== 'Tab' || !dialogRef.current) return;
+
+      const focusable = dialogRef.current.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (!focusable.length) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
       }
     };
 
@@ -25,6 +45,7 @@ const ConfirmDialog = ({ open, message, confirmLabel, onConfirm, onCancel }) => 
   return (
     <div className="confirm-overlay" onClick={onCancel}>
       <div
+        ref={dialogRef}
         className="confirm-dialog"
         role="dialog"
         aria-modal="true"

@@ -19,7 +19,7 @@ function warn(...args) {
 
 const excludeUrl = [
   /.*:\/\/dashboard\.twitch\.tv.*/,
-  /.*:\/\/.*\.twitch\.tv\/settings\/.*/,
+  /\/settings(?:\/|$)/,
 ];
 
 const claimGuard = createClaimGuard({ cooldownMs: 2000 });
@@ -37,12 +37,22 @@ function debounce(func, wait) {
 }
 
 function sendIncrement(channelName) {
+  // Content script cannot import browser-api (no ESM); inline chrome/browser pick
+  const runtimeApi =
+    typeof browser !== 'undefined' && browser.runtime
+      ? browser.runtime
+      : typeof chrome !== 'undefined' && chrome.runtime
+        ? chrome.runtime
+        : null;
+
+  if (!runtimeApi) return;
+
   try {
-    chrome.runtime.sendMessage(
+    runtimeApi.sendMessage(
       { type: 'INCREMENT_CLAIM', channel: channelName },
       (response) => {
-        if (chrome.runtime.lastError) {
-          warn('INCREMENT_CLAIM failed:', chrome.runtime.lastError.message);
+        if (runtimeApi.lastError) {
+          warn('INCREMENT_CLAIM failed:', runtimeApi.lastError.message);
           return;
         }
         if (response?.ok) {
@@ -128,12 +138,11 @@ function rediscoverSummary() {
 function setupBodyObserver() {
   if (bodyObserver) bodyObserver.disconnect();
 
-  // Rediscover summary and re-check for claim buttons outside the summary subtree
+  // Rediscover summary when Twitch mounts or moves the community-points-summary element
   bodyObserver = new MutationObserver(() => {
     if (bodyDebounceId) clearTimeout(bodyDebounceId);
     bodyDebounceId = setTimeout(() => {
       rediscoverSummary();
-      claimBonus();
     }, 500);
   });
 

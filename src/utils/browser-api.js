@@ -4,11 +4,6 @@
 const hasBrowser = typeof browser !== 'undefined';
 const hasChrome = typeof chrome !== 'undefined';
 
-const isFirefox =
-  hasBrowser ||
-  (typeof navigator !== 'undefined' && /firefox/i.test(navigator.userAgent));
-const isChrome = hasChrome && !isFirefox;
-
 // Prefer Firefox's browser API when available, otherwise chrome
 export const browserAPI = (() => {
   if (hasBrowser) {
@@ -72,7 +67,7 @@ export const browserAPI = (() => {
     },
     runtime: {
       getManifest: () => ({
-        version: '1.3.0'
+        version: __APP_VERSION__
       }),
       onInstalled: {
         addListener: () => {},
@@ -113,12 +108,6 @@ export const browserAPI = (() => {
     }
   };
 })();
-
-export const browserType = {
-  isFirefox,
-  isChrome,
-  isExtension: hasBrowser || hasChrome
-};
 
 export const storage = browserAPI.storage;
 export const runtime = browserAPI.runtime;

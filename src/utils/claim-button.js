@@ -33,6 +33,10 @@ export const CLAIM_ARIA_LABELS = [
   '보너스 받기'
 ];
 
+const CLAIM_ARIA_SELECTOR = CLAIM_ARIA_LABELS.map(
+  (label) => `[aria-label="${globalThis.CSS?.escape?.(label) ?? label}"]`
+).join(',');
+
 export function findCommunityPointsSummary(doc = document) {
   return (
     doc.querySelector('[data-test-selector="community-points-summary"]') ||
@@ -42,11 +46,7 @@ export function findCommunityPointsSummary(doc = document) {
 }
 
 function findButtonByAriaLabel(root) {
-  for (const label of CLAIM_ARIA_LABELS) {
-    const button = root.querySelector(`[aria-label="${label}"]`);
-    if (button) return button;
-  }
-  return null;
+  return root.querySelector(CLAIM_ARIA_SELECTOR);
 }
 
 function normalizeToButton(el, root) {

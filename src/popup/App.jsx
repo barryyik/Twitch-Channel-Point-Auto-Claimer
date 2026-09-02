@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 import { storage, runtime } from '../utils/browser-api.js';
 import { getMessage } from './i18n.js';
 import { useTheme, ACCENT_PRESETS } from './useTheme.js';
@@ -23,6 +23,7 @@ const App = () => {
   const headTableRef = useRef(null);
   const headWrapRef = useRef(null);
   const bodyTableRef = useRef(null);
+  const confirmTriggerRef = useRef(null);
   const {
     theme,
     accent,
@@ -40,26 +41,37 @@ const App = () => {
     });
   };
 
-  const requestClearAll = () => {
+  const restoreConfirmFocus = useCallback(() => {
+    confirmTriggerRef.current?.focus();
+    confirmTriggerRef.current = null;
+  }, []);
+
+  const requestClearAll = (event) => {
+    confirmTriggerRef.current = event.currentTarget;
     setConfirmState({ type: 'all' });
   };
 
-  const requestClearChannel = (channelName) => {
+  const requestClearChannel = (channelName) => (event) => {
+    confirmTriggerRef.current = event.currentTarget;
     setConfirmState({ type: 'channel', channel: channelName });
   };
 
-  const handleConfirmCancel = () => {
+  const handleConfirmCancel = useCallback(() => {
     setConfirmState(null);
-  };
+    restoreConfirmFocus();
+  }, [restoreConfirmFocus]);
 
-  const handleConfirmOk = () => {
+  const handleConfirmOk = useCallback(() => {
     if (!confirmState) return;
 
+    const closeDialog = () => {
+      loadData();
+      setConfirmState(null);
+      restoreConfirmFocus();
+    };
+
     if (confirmState.type === 'all') {
-      storage.local.remove('tcpacObj', () => {
-        loadData();
-        setConfirmState(null);
-      });
+      storage.local.remove('tcpacObj', closeDialog);
       return;
     }
 
@@ -68,19 +80,16 @@ const App = () => {
       storage.local.get('tcpacObj', (result) => {
         const newData = { ...(result.tcpacObj || {}) };
         delete newData[channelName];
-        storage.local.set({ tcpacObj: newData }, () => {
-          loadData();
-          setConfirmState(null);
-        });
+        storage.local.set({ tcpacObj: newData }, closeDialog);
       });
     }
-  };
+  }, [confirmState, restoreConfirmFocus]);
 
   useEffect(() => {
     if (runtime && runtime.getManifest) {
       setVersion(runtime.getManifest().version);
     } else {
-      setVersion('1.3.0');
+      setVersion(__APP_VERSION__);
     }
   }, []);
 
@@ -197,6 +206,7 @@ const App = () => {
             <div className="theme-dropdown" role="menu">
               <button
                 type="button"
+                role="menuitem"
                 className={`theme-dropdown-item ${theme === 'system' ? 'active' : ''}`}
                 onClick={() => saveThemePreference('system')}
               >
@@ -205,6 +215,7 @@ const App = () => {
               </button>
               <button
                 type="button"
+                role="menuitem"
                 className={`theme-dropdown-item ${theme === 'light' ? 'active' : ''}`}
                 onClick={() => saveThemePreference('light')}
               >
@@ -213,6 +224,7 @@ const App = () => {
               </button>
               <button
                 type="button"
+                role="menuitem"
                 className={`theme-dropdown-item ${theme === 'dark' ? 'active' : ''}`}
                 onClick={() => saveThemePreference('dark')}
               >

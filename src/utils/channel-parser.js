@@ -18,7 +18,6 @@ export function getChannelNameFromUrl(url) {
     pathname = decodeURIComponent(pathname);
   } catch (e) {
     // If decoding fails, use the original pathname
-    console.warn('[Channel Parser] Failed to decode pathname:', pathname);
   }
   
   // Remove leading and trailing slashes and split

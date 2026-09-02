@@ -19,9 +19,21 @@ bun install
 bun run build
 ```
 
+After code changes, run `bun run build:chrome` or `bun run build:firefox`, then reload the unpacked extension in your browser. Manifest `version` is set from `package.json` at build time. Use `bun run dev` for popup-only Vite preview on port 5173.
+
 ## Update log
 
 ```
+Version 1.3.1 (2026.08.31):
+- Fix: Body MutationObserver only rediscovers community-points-summary; full claim checks no longer run on every chat DOM mutation
+- Change: Outside-summary claim buttons are picked up by the 5s interval (~5s latency by design; was ~500ms via body observer)
+- Change: Combined multi-locale aria-label selector (single querySelector fallback)
+- Change: Extension version taken from package.json at build time (manifests + popup fallback)
+- Change: Remove no-op --watch / dev:chrome / dev:firefox scripts; iterate with build:chrome or build:firefox
+- Fix: Settings exclude URL matches bare /settings as well as /settings/...
+- Fix: Drop ungated console.warn in channel-parser decode path
+- Change: Theme menu menuitem roles; ConfirmDialog focus trap and restore to trigger
+
 Version 1.3.0 (2026.08.22):
 - Add: Six accent color presets (teal, green, blue, purple, orange, pink) in theme menu
 - Add: Accent color persistence with pre-paint apply via theme-boot (no flash on reload)

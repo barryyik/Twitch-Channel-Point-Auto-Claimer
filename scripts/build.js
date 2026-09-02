@@ -1,5 +1,5 @@
 // scripts/build.js
-import { existsSync, mkdirSync, copyFileSync, readdirSync, rmSync } from 'fs';
+import { existsSync, mkdirSync, copyFileSync, readdirSync, rmSync, readFileSync, writeFileSync } from 'fs';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { execSync } from 'child_process';
@@ -10,9 +10,15 @@ const __dirname = dirname(__filename);
 // Get browser target
 const args = process.argv.slice(2);
 const browserTarget = args[0] || process.env.BROWSER || 'chrome';
-const isWatch = args.includes('--watch');
 
 console.log(`🔨 Building for ${browserTarget}...`);
+
+// Regenerate content.js and theme-boot.js before packaging (fail-fast)
+execSync('bun run scripts/build-content.js', { stdio: 'inherit' });
+execSync('bun run scripts/build-theme-boot.js', { stdio: 'inherit' });
+
+const pkg = JSON.parse(readFileSync(resolve(__dirname, '../package.json'), 'utf-8'));
+const appVersion = pkg.version;
 
 // Paths
 const srcDir = resolve(__dirname, '../src');
@@ -25,11 +31,14 @@ if (existsSync(distDir)) {
 }
 mkdirSync(distDir, { recursive: true });
 
-// 1. Copy manifest
+// 1. Copy manifest and inject version from package.json
 const manifestSrc = resolve(srcDir, `manifest.${browserTarget}.json`);
 const manifestDest = resolve(distDir, 'manifest.json');
 if (existsSync(manifestSrc)) {
   copyFileSync(manifestSrc, manifestDest);
+  const manifest = JSON.parse(readFileSync(manifestDest, 'utf-8'));
+  manifest.version = appVersion;
+  writeFileSync(manifestDest, `${JSON.stringify(manifest, null, 2)}\n`, 'utf-8');
   console.log('✓ Copied manifest');
 } else {
   console.error(`❌ Manifest not found: ${manifestSrc}`);
@@ -87,7 +96,7 @@ console.log(`\n📦 Building popup with Vite...`);
 try {
   // Vite will output to the same dist directory
   const viteCmd = `bun run vite build --outDir ${distDir} --emptyOutDir false`;
-  execSync(viteCmd, { 
+  execSync(viteCmd, {
     stdio: 'inherit',
     env: { ...process.env, BROWSER: browserTarget }
   });
@@ -106,17 +115,17 @@ console.log(`📁 Output: ${distDir}`);
 // Helper function to copy directories recursively
 function copyRecursive(src, dest) {
   if (!existsSync(src)) return;
-  
+
   if (!existsSync(dest)) {
     mkdirSync(dest, { recursive: true });
   }
-  
+
   const entries = readdirSync(src, { withFileTypes: true });
-  
+
   for (const entry of entries) {
     const srcPath = resolve(src, entry.name);
     const destPath = resolve(dest, entry.name);
-    
+
     if (entry.isDirectory()) {
       copyRecursive(srcPath, destPath);
     } else {

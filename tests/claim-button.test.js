@@ -49,11 +49,17 @@ function matches(node, selector) {
 }
 
 function queryIn(root, selector) {
-  const stack = [...(root.children || [])];
-  while (stack.length) {
-    const node = stack.shift();
-    if (matches(node, selector)) return node;
-    if (node.children) stack.push(...node.children);
+  const selectors = selector.includes(',')
+    ? selector.split(',').map((part) => part.trim())
+    : [selector];
+
+  for (const singleSelector of selectors) {
+    const stack = [...(root.children || [])];
+    while (stack.length) {
+      const node = stack.shift();
+      if (matches(node, singleSelector)) return node;
+      if (node.children) stack.push(...node.children);
+    }
   }
   return null;
 }
