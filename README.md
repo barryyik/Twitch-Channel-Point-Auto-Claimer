@@ -24,6 +24,12 @@ After code changes, run `bun run build:chrome` or `bun run build:firefox`, then 
 ## Update log
 
 ```
+Version 1.4.0 (2026.09.03):
+- Add: Pin channels to favourites; pinned rows appear first in user-defined order
+- Add: ↑/↓ reorder controls for pinned rows
+- Add: Clear-record confirms when clearing removes a pinned channel
+- Fix: Scrollbar gutter only when table body overflows
+
 Version 1.3.1 (2026.08.31):
 - Fix: Body MutationObserver only rediscovers community-points-summary; full claim checks no longer run on every chat DOM mutation
 - Change: Outside-summary claim buttons are picked up by the 5s interval (~5s latency by design; was ~500ms via body observer)

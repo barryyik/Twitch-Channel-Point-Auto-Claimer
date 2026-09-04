@@ -1,13 +1,26 @@
 import React, { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 import { storage, runtime } from '../utils/browser-api.js';
+import {
+  partitionChannels,
+  pruneFavorites,
+  toggleFavorite,
+  isPinned,
+  removeFavorite,
+  reorderFavorites,
+  normalizeChannel
+} from '../utils/favorites.js';
 import { getMessage } from './i18n.js';
 import { useTheme, ACCENT_PRESETS } from './useTheme.js';
-import { PaletteIcon, MonitorIcon, SunIcon, MoonIcon, TrashIcon } from './ThemeIcons.jsx';
+import { PaletteIcon, MonitorIcon, SunIcon, MoonIcon } from './ThemeIcons.jsx';
 import ConfirmDialog from './ConfirmDialog.jsx';
+import PinnedRow from './PinnedRow.jsx';
+import ChannelRow from './ChannelRow.jsx';
 import './App.css';
 
 const TABLE_COLS = (
   <colgroup>
+    <col />
+    <col />
     <col />
     <col />
     <col />
@@ -17,6 +30,7 @@ const TABLE_COLS = (
 
 const App = () => {
   const [claimData, setClaimData] = useState({});
+  const [favorites, setFavorites] = useState([]);
   const [loading, setLoading] = useState(true);
   const [version, setVersion] = useState('');
   const [confirmState, setConfirmState] = useState(null);
@@ -34,26 +48,66 @@ const App = () => {
     saveAccentPreference
   } = useTheme();
 
-  const loadData = () => {
-    storage.local.get('tcpacObj', (result) => {
-      setClaimData(result.tcpacObj || {});
-      setLoading(false);
-    });
-  };
+  const applyLoadedData = useCallback((result) => {
+    const claims = result.tcpacObj || {};
+    const rawFavorites = result.tcpacFavorites || [];
+    const pruned = pruneFavorites(rawFavorites, claims);
+    setClaimData(claims);
+    setFavorites(pruned);
+    if (pruned.length !== rawFavorites.length) {
+      storage.local.set({ tcpacFavorites: pruned });
+    }
+    setLoading(false);
+  }, []);
+
+  const loadData = useCallback(() => {
+    storage.local.get(['tcpacObj', 'tcpacFavorites'], applyLoadedData);
+  }, [applyLoadedData]);
 
   const restoreConfirmFocus = useCallback(() => {
     confirmTriggerRef.current?.focus();
     confirmTriggerRef.current = null;
   }, []);
 
+  const handleTogglePin = useCallback(
+    (channel) => {
+      const next = toggleFavorite(favorites, channel);
+      setFavorites(next);
+      storage.local.set({ tcpacFavorites: next });
+    },
+    [favorites]
+  );
+
+  const handleMovePinned = useCallback(
+    (channel, direction) => {
+      const from = favorites.findIndex(
+        (entry) => normalizeChannel(entry) === normalizeChannel(channel)
+      );
+      if (from < 0) return;
+
+      const to = from + (direction === 'up' ? -1 : 1);
+      if (to < 0 || to >= favorites.length) return;
+
+      const next = reorderFavorites(favorites, from, to);
+      setFavorites(next);
+      storage.local.set({ tcpacFavorites: next });
+    },
+    [favorites]
+  );
+
   const requestClearAll = (event) => {
     confirmTriggerRef.current = event.currentTarget;
-    setConfirmState({ type: 'all' });
+    const pinnedCount = favorites.length;
+    setConfirmState({ type: 'all', pinnedCount });
   };
 
   const requestClearChannel = (channelName) => (event) => {
     confirmTriggerRef.current = event.currentTarget;
-    setConfirmState({ type: 'channel', channel: channelName });
+    setConfirmState({
+      type: 'channel',
+      channel: channelName,
+      isPinned: isPinned(favorites, channelName)
+    });
   };
 
   const handleConfirmCancel = useCallback(() => {
@@ -71,19 +125,23 @@ const App = () => {
     };
 
     if (confirmState.type === 'all') {
-      storage.local.remove('tcpacObj', closeDialog);
+      storage.local.remove(['tcpacObj', 'tcpacFavorites'], closeDialog);
       return;
     }
 
     if (confirmState.type === 'channel') {
       const channelName = confirmState.channel;
-      storage.local.get('tcpacObj', (result) => {
+      storage.local.get(['tcpacObj', 'tcpacFavorites'], (result) => {
         const newData = { ...(result.tcpacObj || {}) };
         delete newData[channelName];
-        storage.local.set({ tcpacObj: newData }, closeDialog);
+        const newFavorites = removeFavorite(result.tcpacFavorites || [], channelName);
+        storage.local.set(
+          { tcpacObj: newData, tcpacFavorites: newFavorites },
+          closeDialog
+        );
       });
     }
-  }, [confirmState, restoreConfirmFocus]);
+  }, [confirmState, restoreConfirmFocus, loadData]);
 
   useEffect(() => {
     if (runtime && runtime.getManifest) {
@@ -95,22 +153,23 @@ const App = () => {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
 
   useEffect(() => {
     if (!storage?.onChanged) return undefined;
 
     const handleStorageChange = (changes, areaName) => {
-      if (areaName !== 'local' || !changes.tcpacObj) return;
-      setClaimData(changes.tcpacObj.newValue || {});
-      setLoading(false);
+      if (areaName !== 'local') return;
+      if (!changes.tcpacObj && !changes.tcpacFavorites) return;
+
+      storage.local.get(['tcpacObj', 'tcpacFavorites'], applyLoadedData);
     };
 
     storage.onChanged.addListener(handleStorageChange);
     return () => {
       storage.onChanged.removeListener(handleStorageChange);
     };
-  }, []);
+  }, [applyLoadedData]);
 
   // Size columns to content and keep header/body tables aligned
   useLayoutEffect(() => {
@@ -158,29 +217,43 @@ const App = () => {
 
     const scrollEl = bodyTable.closest('.table-body-scroll');
     const headWrap = headWrapRef.current;
-    const scrollbarWidth = scrollEl
-      ? Math.ceil(Math.max(0, scrollEl.offsetWidth - scrollEl.clientWidth))
-      : 0;
 
     headTable.style.tableLayout = 'fixed';
     bodyTable.style.tableLayout = 'fixed';
     headTable.style.width = `${total}px`;
     bodyTable.style.width = `${total}px`;
-    // Pad header wrap to cover the body scrollbar gutter (avoids empty strip)
-    if (headWrap) {
-      headWrap.style.paddingRight = `${scrollbarWidth}px`;
+
+    if (scrollEl && headWrap) {
+      const needsScroll = scrollEl.scrollHeight > scrollEl.clientHeight + 1;
+      scrollEl.classList.toggle('table-body-scroll--overflow', needsScroll);
+      headWrap.style.paddingRight = needsScroll
+        ? `${Math.ceil(Math.max(0, scrollEl.offsetWidth - scrollEl.clientWidth))}px`
+        : '0px';
     }
-  }, [claimData, loading]);
+  }, [claimData, favorites, loading]);
 
-  const channels = Object.keys(claimData);
-  const hasRecords = channels.length > 0;
+  const { pinned, others } = partitionChannels(claimData, favorites);
+  const hasRecords = Object.keys(claimData).length > 0;
+  const showOthersDivider = pinned.length > 0 && others.length > 0;
 
-  const confirmMessage =
-    confirmState?.type === 'all'
-      ? getMessage('confirmclearall')
-      : confirmState?.type === 'channel'
-        ? getMessage('confirmclearchannel', [confirmState.channel])
-        : '';
+  const confirmMessage = (() => {
+    if (confirmState?.type === 'all') {
+      if (confirmState.pinnedCount === 1) {
+        return getMessage('confirmclearallwithpinssingle');
+      }
+      if (confirmState.pinnedCount > 1) {
+        return getMessage('confirmclearallwithpins', [confirmState.pinnedCount]);
+      }
+      return getMessage('confirmclearall');
+    }
+    if (confirmState?.type === 'channel') {
+      if (confirmState.isPinned) {
+        return getMessage('confirmclearchannelpinned', [confirmState.channel]);
+      }
+      return getMessage('confirmclearchannel', [confirmState.channel]);
+    }
+    return '';
+  })();
 
   const confirmLabel =
     confirmState?.type === 'all' ? getMessage('clearall') : getMessage('clear');
@@ -265,6 +338,8 @@ const App = () => {
                 {TABLE_COLS}
                 <thead>
                   <tr>
+                    <th className="col-pin" aria-label={getMessage('pin')} />
+                    <th className="col-drag" aria-label={getMessage('reorder')} />
                     <th>{getMessage('channel')}</th>
                     <th className="col-num">{getMessage('claimedcount')}</th>
                     <th className="col-num col-approx">{getMessage('approxpoints')}</th>
@@ -279,42 +354,49 @@ const App = () => {
                 <tbody>
                   {!hasRecords ? (
                     <tr>
-                      <td colSpan="4" className="empty-state">
+                      <td colSpan="6" className="empty-state">
                         {getMessage('empty')}
                       </td>
                     </tr>
                   ) : (
-                    Object.entries(claimData)
-                      .sort(([channelA], [channelB]) => channelA.localeCompare(channelB))
-                      .map(([channel, count]) => (
-                        <tr key={channel}>
-                          <td>
-                            <a
-                              href={`https://www.twitch.tv/${channel}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              {channel}
-                            </a>
-                          </td>
-                          <td className="col-num">{count}</td>
-                          <td className="col-num col-approx">~{count * 50}</td>
-                          <td className="col-clear-cell">
-                            <button
-                              type="button"
-                              className="tcpacDelBtn"
-                              onClick={() => requestClearChannel(channel)}
-                            >
-                              <TrashIcon />
-                              {getMessage('clear')}
-                            </button>
-                          </td>
+                    <>
+                      {pinned.map(({ channel, count }) => {
+                        const index = favorites.findIndex(
+                          (entry) =>
+                            normalizeChannel(entry) === normalizeChannel(channel)
+                        );
+                        return (
+                          <PinnedRow
+                            key={channel}
+                            channel={channel}
+                            count={count}
+                            canMoveUp={index > 0}
+                            canMoveDown={index >= 0 && index < favorites.length - 1}
+                            onTogglePin={handleTogglePin}
+                            onMove={handleMovePinned}
+                            onClearChannel={requestClearChannel}
+                          />
+                        );
+                      })}
+                      {showOthersDivider && (
+                        <tr className="section-divider-row">
+                          <td colSpan="6">{getMessage('others')}</td>
                         </tr>
-                      ))
+                      )}
+                      {others.map(({ channel, count }) => (
+                        <ChannelRow
+                          key={channel}
+                          channel={channel}
+                          count={count}
+                          onTogglePin={handleTogglePin}
+                          onClearChannel={requestClearChannel}
+                        />
+                      ))}
+                    </>
                   )}
                   {hasRecords && (
                     <tr className="last-row">
-                      <td colSpan="3"></td>
+                      <td colSpan="5" />
                       <td className="col-clear-cell">
                         <button
                           type="button"

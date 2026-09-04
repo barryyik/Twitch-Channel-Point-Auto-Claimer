@@ -70,5 +70,38 @@
   },
   "accentpink": {
     "message": "Pink"
+  },
+  "pin": {
+    "message": "Pin"
+  },
+  "unpin": {
+    "message": "Unpin"
+  },
+  "pinchannel": {
+    "message": "Pin $1"
+  },
+  "unpinchannel": {
+    "message": "Unpin $1"
+  },
+  "reorder": {
+    "message": "Reorder"
+  },
+  "moveup": {
+    "message": "Move $1 up"
+  },
+  "movedown": {
+    "message": "Move $1 down"
+  },
+  "others": {
+    "message": "Others"
+  },
+  "confirmclearchannelpinned": {
+    "message": "Clear records for $1? This channel is pinned and will be removed from your favourites."
+  },
+  "confirmclearallwithpinssingle": {
+    "message": "Clear all records? This will also remove 1 pinned channel from your favourites."
+  },
+  "confirmclearallwithpins": {
+    "message": "Clear all records? This will also remove $1 pinned channels from your favourites."
   }
 }

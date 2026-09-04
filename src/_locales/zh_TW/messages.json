@@ -70,5 +70,38 @@
   },
   "accentpink": {
     "message": "粉色"
+  },
+  "pin": {
+    "message": "釘選"
+  },
+  "unpin": {
+    "message": "取消釘選"
+  },
+  "pinchannel": {
+    "message": "釘選 $1"
+  },
+  "unpinchannel": {
+    "message": "取消釘選 $1"
+  },
+  "reorder": {
+    "message": "重新排序"
+  },
+  "moveup": {
+    "message": "上移 $1"
+  },
+  "movedown": {
+    "message": "下移 $1"
+  },
+  "others": {
+    "message": "其他"
+  },
+  "confirmclearchannelpinned": {
+    "message": "確定要清除 $1 的記錄嗎？此頻道已釘選，將一併從我的最愛中移除。"
+  },
+  "confirmclearallwithpinssingle": {
+    "message": "確定要清除全部記錄嗎？這也會移除 1 個已釘選的頻道。"
+  },
+  "confirmclearallwithpins": {
+    "message": "確定要清除全部記錄嗎？這也會移除 $1 個已釘選的頻道。"
   }
 }

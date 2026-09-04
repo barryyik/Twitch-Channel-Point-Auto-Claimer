@@ -24,7 +24,21 @@ const FALLBACKS = {
   accentblue: 'Blue',
   accentpurple: 'Purple',
   accentorange: 'Orange',
-  accentpink: 'Pink'
+  accentpink: 'Pink',
+  pin: 'Pin',
+  unpin: 'Unpin',
+  pinchannel: 'Pin $1',
+  unpinchannel: 'Unpin $1',
+  reorder: 'Reorder',
+  moveup: 'Move $1 up',
+  movedown: 'Move $1 down',
+  others: 'Others',
+  confirmclearchannelpinned:
+    'Clear records for $1? This channel is pinned and will be removed from your favourites.',
+  confirmclearallwithpinssingle:
+    'Clear all records? This will also remove 1 pinned channel from your favourites.',
+  confirmclearallwithpins:
+    'Clear all records? This will also remove $1 pinned channels from your favourites.'
 };
 
 export function getMessage(messageName, substitutions) {

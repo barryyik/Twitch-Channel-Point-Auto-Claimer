@@ -252,6 +252,9 @@ body {
 .table-body-scroll {
   max-height: 320px;
   overflow-y: auto;
+}
+
+.table-body-scroll--overflow {
   scrollbar-gutter: stable;
 }
 
@@ -307,6 +310,101 @@ th.col-approx {
   font-weight: 700;
 }
 
+.col-pin {
+  min-width: 28px;
+  width: 28px;
+  text-align: center;
+  padding-left: 6px;
+  padding-right: 6px;
+}
+
+.col-drag {
+  min-width: 48px;
+  width: 48px;
+  text-align: center;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+.pin-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.pin-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.pin-btn:hover {
+  color: var(--accent);
+  background-color: var(--accent-soft);
+}
+
+.pin-btn.pinned {
+  color: var(--accent);
+}
+
+.reorder-controls {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+}
+
+.reorder-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.reorder-btn svg {
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+}
+
+.reorder-btn:hover:not(:disabled) {
+  color: var(--accent);
+  background-color: var(--accent-soft);
+}
+
+.reorder-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.row-pinned {
+  background-color: var(--accent-soft);
+}
+
+.section-divider-row td {
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding-top: 10px;
+  padding-bottom: 6px;
+  background-color: var(--bg-secondary);
+  border-top: 1px solid var(--border-color);
+}
+
 .empty-state {
   text-align: center;
   color: var(--text-secondary);
@@ -335,6 +433,17 @@ th.col-approx {
 }
 
 .tcpacDelBtn:hover {
+  background-color: var(--accent-soft);
+  color: var(--accent-hover);
+  border-color: var(--accent);
+}
+
+.row-pinned .tcpacDelBtn {
+  background-color: var(--bg-primary);
+  border-color: var(--accent);
+}
+
+.row-pinned .tcpacDelBtn:hover {
   background-color: var(--accent-soft);
   color: var(--accent-hover);
   border-color: var(--accent);
