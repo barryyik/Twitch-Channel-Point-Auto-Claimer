@@ -11,6 +11,12 @@
   "approxpoints": {
     "message": "點數估算"
   },
+  "sortascending": {
+    "message": "升冪排序"
+  },
+  "sortdescending": {
+    "message": "降冪排序"
+  },
   "clearrecord": {
     "message": "清除"
   },

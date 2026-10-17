@@ -5,6 +5,8 @@ const FALLBACKS = {
   channel: 'Channel',
   claimedcount: 'Claims',
   approxpoints: 'Approx.',
+  sortascending: 'Sort ascending',
+  sortdescending: 'Sort descending',
   clearrecord: 'Clear',
   clear: 'Clear',
   clearall: 'Clear All',
