@@ -15,6 +15,14 @@ import { PaletteIcon, MonitorIcon, SunIcon, MoonIcon } from './ThemeIcons.jsx';
 import ConfirmDialog from './ConfirmDialog.jsx';
 import PinnedRow from './PinnedRow.jsx';
 import ChannelRow from './ChannelRow.jsx';
+import SortableHeader from './SortableHeader.jsx';
+import {
+  DEFAULT_SORT,
+  SORT_STORAGE_KEY,
+  normalizeSortPreference,
+  nextSortPreference,
+  sortChannels
+} from '../utils/channel-sort.js';
 import './App.css';
 
 const TABLE_COLS = (
@@ -31,6 +39,7 @@ const TABLE_COLS = (
 const App = () => {
   const [claimData, setClaimData] = useState({});
   const [favorites, setFavorites] = useState([]);
+  const [sortPreference, setSortPreference] = useState(DEFAULT_SORT);
   const [loading, setLoading] = useState(true);
   const [version, setVersion] = useState('');
   const [confirmState, setConfirmState] = useState(null);
@@ -54,6 +63,9 @@ const App = () => {
     const pruned = pruneFavorites(rawFavorites, claims);
     setClaimData(claims);
     setFavorites(pruned);
+    if (Object.prototype.hasOwnProperty.call(result, SORT_STORAGE_KEY)) {
+      setSortPreference(normalizeSortPreference(result[SORT_STORAGE_KEY]));
+    }
     if (pruned.length !== rawFavorites.length) {
       storage.local.set({ tcpacFavorites: pruned });
     }
@@ -61,8 +73,14 @@ const App = () => {
   }, []);
 
   const loadData = useCallback(() => {
-    storage.local.get(['tcpacObj', 'tcpacFavorites'], applyLoadedData);
+    storage.local.get(['tcpacObj', 'tcpacFavorites', SORT_STORAGE_KEY], applyLoadedData);
   }, [applyLoadedData]);
+
+  const handleSort = (column) => {
+    const next = nextSortPreference(sortPreference, column);
+    setSortPreference(next);
+    storage.local.set({ [SORT_STORAGE_KEY]: next });
+  };
 
   const restoreConfirmFocus = useCallback(() => {
     confirmTriggerRef.current?.focus();
@@ -160,6 +178,9 @@ const App = () => {
 
     const handleStorageChange = (changes, areaName) => {
       if (areaName !== 'local') return;
+      if (changes[SORT_STORAGE_KEY]) {
+        setSortPreference(normalizeSortPreference(changes[SORT_STORAGE_KEY].newValue));
+      }
       if (!changes.tcpacObj && !changes.tcpacFavorites) return;
 
       storage.local.get(['tcpacObj', 'tcpacFavorites'], applyLoadedData);
@@ -230,9 +251,10 @@ const App = () => {
         ? `${Math.ceil(Math.max(0, scrollEl.offsetWidth - scrollEl.clientWidth))}px`
         : '0px';
     }
-  }, [claimData, favorites, loading]);
+  }, [claimData, favorites, loading, sortPreference]);
 
   const { pinned, others } = partitionChannels(claimData, favorites);
+  const sortedOthers = sortChannels(others, sortPreference);
   const hasRecords = Object.keys(claimData).length > 0;
   const showOthersDivider = pinned.length > 0 && others.length > 0;
 
@@ -340,9 +362,12 @@ const App = () => {
                   <tr>
                     <th className="col-pin" aria-label={getMessage('pin')} />
                     <th className="col-drag" aria-label={getMessage('reorder')} />
-                    <th>{getMessage('channel')}</th>
-                    <th className="col-num">{getMessage('claimedcount')}</th>
-                    <th className="col-num col-approx">{getMessage('approxpoints')}</th>
+                    <SortableHeader column="channel" label={getMessage('channel')}
+                      preference={sortPreference} onSort={handleSort} />
+                    <SortableHeader column="count" label={getMessage('claimedcount')}
+                      className="col-num" preference={sortPreference} onSort={handleSort} />
+                    <SortableHeader column="points" label={getMessage('approxpoints')}
+                      className="col-num" preference={sortPreference} onSort={handleSort} />
                     <th className="col-clear-cell">{getMessage('clearrecord')}</th>
                   </tr>
                 </thead>
@@ -383,7 +408,7 @@ const App = () => {
                           <td colSpan="6">{getMessage('others')}</td>
                         </tr>
                       )}
-                      {others.map(({ channel, count }) => (
+                      {sortedOthers.map(({ channel, count }) => (
                         <ChannelRow
                           key={channel}
                           channel={channel}

@@ -11,6 +11,12 @@
   "approxpoints": {
     "message": "Approx."
   },
+  "sortascending": {
+    "message": "Sort ascending"
+  },
+  "sortdescending": {
+    "message": "Sort descending"
+  },
   "clearrecord": {
     "message": "Clear"
   },
